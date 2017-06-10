@@ -40,6 +40,7 @@ def cmdparse():
     group.add_argument('-n', '--new', type=str, help="download new chapters")
     group.add_argument('-l', '--latest', type=str, help="download latest chapter")
     group.add_argument('--checknew', action='store_true', help="check how many new chapters are available")
+    group.add_argument('--list', action='store_true', help="list all available chapters")
 
     parser.add_argument('-d', '--dir', type=str, default='.', help='download directory')
     parser.add_argument('-v', '--version', action='version',
@@ -156,8 +157,10 @@ def main():
                 # last chapter
                 manga.get(manga.latest)
             elif args.new:
-                # last chapter
                 manga.getNewChapters()
+            elif args.list:
+                for chapter in manga.chapters:
+                    print(chapter.name)
             else:
                 numnew = manga.numNewChapters()
                 if (numnew == 0):
