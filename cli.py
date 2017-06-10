@@ -87,11 +87,14 @@ def configparse(filepath):
     config = []
     base_dir = None
 
+    default_site = 'mangahere'
     if parser.has_section('GetManga'):
         if parser.has_option('GetManga', 'base_dir'):
             base_dir = parser.get('GetManga', 'base_dir')
             if base_dir[-1] != "/":
                 base_dir = base_dir + "/"
+        if parser.has_option('GetManga', 'site'):
+            default_site = parser.get('GetManga', 'site')
     overall_config = {"base_dir":base_dir}
     for section in parser.sections():
         if section != "GetManga":
@@ -103,7 +106,10 @@ def configparse(filepath):
                     this_dir = parser.get(title, 'dir')
                 if (base_dir == None) and (this_dir == None):
                     sys.exit("Error: must define either dir or base_dir in config file.")
-                config.append((parser.get(title, 'site'), title,
+                this_site = default_site
+                if parser.has_option(title, 'site'):
+                    this_site = parser.get(title, 'site')
+                config.append((this_site, title,
                                this_dir,
                                parser.get(title, 'chapters')))
             except Exception as msg:
