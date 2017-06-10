@@ -186,9 +186,14 @@ def downloadChapters(manga, arg_chapter, arg_begin, arg_end):
             # actually, also download decimal chapters (e.g. 12 will download 12.1, 12.2, etc)
             exist = False
             for chapter in manga.chapters:
-                if int(float(chapter.number)) == int(float(arg_chapter)):
-                    manga.get(chapter)
-                    exist = True
+                try:
+                    if int(float(chapter.number)) == int(float(arg_chapter)):
+                        manga.get(chapter)
+                        exist = True
+                except ValueError:
+                    if chapter.number == arg_chapter:
+                        manga.get(chapter)
+                        exist = True
             if (not exist):
                 print("Chapter doesn't exist.")
 
@@ -199,10 +204,18 @@ def downloadChapters(manga, arg_chapter, arg_begin, arg_end):
             for index, chapter in enumerate(manga.chapters):
                 # take the floor of chapter numbers.
                 # so, if we are asked to download 1-2, include 1.1, 1.2, 1.3, etc.
-                if (start == None) and (int(float(chapter.number)) == int(float(arg_begin))):
-                    start = index
-                if arg_end and int(float(chapter.number)) == int(float(arg_end)):
-                    stop = index + 1
+                try:
+                    if (start == None) and (int(float(chapter.number)) == int(float(arg_begin))):
+                        start = index
+                except ValueError:
+                    if (start == None) and (chapter.number == arg_begin):
+                        start = index
+                try:
+                    if arg_end and int(float(chapter.number)) == int(float(arg_end)):
+                        stop = index + 1
+                except ValueError:
+                    if arg_end and (chapter.number == arg_end):
+                        stop = index + 1
             if (start != None) and ((stop != None) or (arg_end == None)):
                 for chapter in manga.chapters[start:stop]:
                     manga.get(chapter)

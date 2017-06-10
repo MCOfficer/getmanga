@@ -266,13 +266,16 @@ class MangaSite(object):
     def _get_chapter_name(self, number, location):
         """Returns the appropriate name for the chapter for achive name"""
         # deal with decimals. we want 6 -> 006 and 2.3 -> 002.3
-        if int(float(number)) == float(number):
-            # it's an integer
+        try:
+            if int(float(number)) == float(number):
+                # it's an integer
+                numstr = number.zfill(3)
+            else:
+                decimal = float(number) - int(float(number))
+                decstr = str(decimal)[1:]
+                numstr = str(int(float(number))).zfill(3) + decstr
+        except ValueError:
             numstr = number.zfill(3)
-        else:
-            decimal = float(number) - int(float(number))
-            decstr = str(decimal)[1:]
-            numstr = str(int(float(number))).zfill(3) + decstr
         return "{0}_c{1}".format(self.title, numstr)
 
     def _get_chapter_uri(self, location):
