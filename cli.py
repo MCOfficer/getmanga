@@ -190,7 +190,7 @@ def main():
                 else:
                     print str(numnew) + " new chapters available"
         except MangaException as msg:
-            raise msg
+            print('%s' % (msg))
 
 
 def downloadVolumes(manga, arg_volumes):
