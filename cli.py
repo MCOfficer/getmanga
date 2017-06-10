@@ -85,7 +85,7 @@ def configparse(filepath):
         try:
             config.append((parser.get(title, 'site'), title,
                            parser.get(title, 'dir'),
-                           parser.getboolean(title, 'new')))
+                           parser.get(title, 'chapters')))
         except Exception as msg:
             raise MangaException('Config Error: %s' % msg)
     return config
@@ -93,52 +93,70 @@ def configparse(filepath):
 
 def main():
     args = cmdparse()
+
     try:
-        manga = GetManga(args.site, args.title)
 
         if args.file:
             config = configparse(args.file)
-            for (site, title, path, new) in config:
+            for (site, title, path, arg_chapter) in config:
                 manga = GetManga(site, title)
                 manga.path = path
-                if new:
-                    manga.get(manga.latest)
-                else:
+                if arg_chapter.strip().lower() == 'all':
                     for chapter in manga.chapters:
                         manga.get(chapter)
+                elif arg_chapter.strip().lower() == 'latest':
+                    manga.get(manga.latest)
+                elif arg_chapter.strip().lower() == 'new':
+                    print "new not yet implemented. downloading latest."
+                    manga.get(manga.latest)
+                else:
+                    (arg_begin, arg_end, arg_chapter, chapter_valid) = parseargchapter(arg_chapter)
+                    if (chapter_valid):
+                        downloadChapters(manga, arg_chapter, arg_begin, arg_end)
+                    else:
+                        print "Error on " + title + ": invalid chapter interval."
+        else:
+            manga = GetManga(args.site, args.title)
+            if args.dir:
+                manga.path = args.dir
 
-        if args.all:
-            for chapter in manga.chapters:
-                manga.get(chapter)
+            if args.all:
+                for chapter in manga.chapters:
+                    manga.get(chapter)
+            elif (args.chapter or args.begin):
+                downloadChapters(manga, args.chapter, args.begin, args.end)
 
-        elif args.chapter:
+            else:
+                # last chapter
+                manga.get(manga.latest)
+
+    except MangaException as msg:
+        sys.exit(msg)
+
+def downloadChapters(manga, arg_chapter, arg_begin, arg_end):
+    try:
+        if arg_chapter:
             # single chapter
             for chapter in manga.chapters:
-                if chapter.number == args.chapter:
+                if chapter.number == arg_chapter:
                     manga.get(chapter)
                     break
             else:
                 sys.exit("Chapter doesn't exist.")
 
-        elif args.begin:
+        elif arg_begin:
             # download range
             start = None
             stop = None
             for index, chapter in enumerate(manga.chapters):
-                if chapter.number == args.begin:
+                if chapter.number == arg_begin:
                     start = index
-                if args.end and chapter.number == args.end:
+                if arg_end and chapter.number == arg_end:
                     stop = index + 1
             for chapter in manga.chapters[start:stop]:
                 manga.get(chapter)
-
-        else:
-            # last chapter
-            manga.get(manga.latest)
-
     except MangaException as msg:
         sys.exit(msg)
-
 
 if __name__ == '__main__':
     main()
