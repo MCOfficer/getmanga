@@ -111,7 +111,7 @@ class GetManga(object):
         except IOError as msg:
             raise MangaException(msg)
 
-        sys.stdout.write("downloading {0} {1}:\n".format(self.title, chapter.number))
+        sys.stdout.write("downloading {0} {1} to {2}\n".format(self.title, chapter.number,cbz_name))
 
         pages = self.manga.get_pages(chapter.uri)
         progress(0, len(pages))
