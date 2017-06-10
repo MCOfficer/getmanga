@@ -108,8 +108,7 @@ def main():
                 elif arg_chapter.strip().lower() == 'latest':
                     manga.get(manga.latest)
                 elif arg_chapter.strip().lower() == 'new':
-                    print "new not yet implemented. downloading latest."
-                    manga.get(manga.latest)
+                    manga.getNewChapters()
                 else:
                     (arg_begin, arg_end, arg_chapter, chapter_valid) = parseargchapter(arg_chapter)
                     if (chapter_valid):

@@ -85,6 +85,8 @@ class GetManga(object):
             i += 1
         for chapter in self.chapters[newi:]:
             self.get(chapter)
+        if len(self.chapters[newi:]) == 0:
+            sys.stdout.write("No new chapters for {0}.\n".format(self.title))
 
     def get(self, chapter):
         """Downloads manga chapter as cbz archive"""
