@@ -177,24 +177,31 @@ def downloadChapters(manga, arg_chapter, arg_begin, arg_end):
     try:
         if arg_chapter:
             # single chapter
+            # actually, also download decimal chapters (e.g. 12 will download 12.1, 12.2, etc)
+            exist = False
             for chapter in manga.chapters:
-                if chapter.number == arg_chapter:
+                if int(float(chapter.number)) == int(float(arg_chapter)):
                     manga.get(chapter)
-                    break
-            else:
-                sys.exit("Chapter doesn't exist.")
+                    exist = True
+            if (not exist):
+                print("Chapter doesn't exist.")
 
         elif arg_begin:
             # download range
             start = None
             stop = None
             for index, chapter in enumerate(manga.chapters):
-                if chapter.number == arg_begin:
+                # take the floor of chapter numbers.
+                # so, if we are asked to download 1-2, include 1.1, 1.2, 1.3, etc.
+                if (start == None) and (int(float(chapter.number)) == int(float(arg_begin))):
                     start = index
-                if arg_end and chapter.number == arg_end:
+                if arg_end and int(float(chapter.number)) == int(float(arg_end)):
                     stop = index + 1
-            for chapter in manga.chapters[start:stop]:
-                manga.get(chapter)
+            if (stop != None) and ( (arg_end == None) or (stop != None)):
+                for chapter in manga.chapters[start:stop]:
+                    manga.get(chapter)
+            else:
+                print("Bad chapter indices provided for " + manga.title)
     except MangaException as msg:
         sys.exit(msg)
 
