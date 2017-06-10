@@ -126,15 +126,15 @@ def configparse(filepath):
 def main():
     args = cmdparse()
 
-    try:
 
-        if args.file:
-            (overall_config, config) = configparse(args.file)
-            base_dir = overall_config["base_dir"]
-            if (base_dir != None):
-                if base_dir[-1] != "/":
-                    base_dir = base_dir + "/"
-            for (site, title, this_dir, arg_chapter) in config:
+    if args.file:
+        (overall_config, config) = configparse(args.file)
+        base_dir = overall_config["base_dir"]
+        if (base_dir != None):
+            if base_dir[-1] != "/":
+                base_dir = base_dir + "/"
+        for (site, title, this_dir, arg_chapter) in config:
+            try:
                 manga = GetManga(site, title)
                 if (this_dir == None):
                     if (base_dir == None):
@@ -157,8 +157,11 @@ def main():
                         else:
                             downloadChapters(manga, arg_chapter, arg_begin, arg_end)
                     else:
-                        print "Error on " + title + ": invalid chapter interval."
-        else:
+                        print title + ": invalid chapter interval"
+            except MangaException as msg:
+                print('%s: %s' % (title,msg))
+    else:
+        try:
             manga = GetManga(args.site, args.title)
             if args.dir:
                 manga.path = args.dir
@@ -186,9 +189,9 @@ def main():
                     print "1 new chapter available"
                 else:
                     print str(numnew) + " new chapters available"
+        except MangaException as msg:
+            raise msg
 
-    except MangaException as msg:
-        sys.exit(msg)
 
 def downloadVolumes(manga, arg_volumes):
     try:
@@ -198,7 +201,7 @@ def downloadVolumes(manga, arg_volumes):
                 if volume in arg_volumes:
                     manga.get(chapter)
     except MangaException as msg:
-        sys.exit(msg)
+        raise msg
 
 def downloadChapters(manga, arg_chapter, arg_begin, arg_end):
     try:
@@ -241,9 +244,9 @@ def downloadChapters(manga, arg_chapter, arg_begin, arg_end):
                 for chapter in manga.chapters[start:stop]:
                     manga.get(chapter)
             else:
-                print("Bad chapter indices provided for " + manga.title)
+                print(manga.title + ": Bad chapter indices provided")
     except MangaException as msg:
-        sys.exit(msg)
+        raise msg
 
 if __name__ == '__main__':
     main()
