@@ -49,6 +49,43 @@ class GetManga(object):
         """Show last available chapter"""
         return self.manga.chapters[-1]
 
+    def checkExists(self, chapter):
+        """Checks if manga chapter has already been downloaded"""
+        path = os.path.expanduser(self.path)
+        if not os.path.isdir(path):
+            try:
+                os.makedirs(path)
+            except OSError as msg:
+                raise MangaException(msg)
+
+        cbz_name = chapter.name + os.path.extsep + 'cbz'
+        cbz_file = os.path.join(path, cbz_name)
+
+        if os.path.isfile(cbz_file):
+            return True
+        else:
+            return False
+
+    def numNewChapters(self):
+        """Returns the number of new chapters available (past those that have been downloaded)"""
+        counter = 0
+        for chapter in self.chapters:
+            counter += 1
+            if self.checkExists(chapter):
+                counter = 0
+        return counter
+
+    def getNewChapters(self):
+        """Downloads all new chapters available (past those that have been downloaded)"""
+        newi = 0
+        i = 0
+        for chapter in self.chapters:
+            if self.checkExists(chapter):
+                newi = i+1
+            i += 1
+        for chapter in self.chapters[newi:]:
+            self.get(chapter)
+
     def get(self, chapter):
         """Downloads manga chapter as cbz archive"""
         path = os.path.expanduser(self.path)

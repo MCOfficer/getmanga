@@ -36,6 +36,7 @@ def cmdparse():
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-a', '--all', action='store_true', help="download all chapters available")
+    group.add_argument('--checknew', action='store_true', help="check how many new chapters are available")
     group.add_argument('-c', '--chapter', type=str, help="chapter(s) number to download")
 
     parser.add_argument('-d', '--dir', type=str, default='.', help='download directory')
@@ -123,6 +124,14 @@ def main():
             if args.all:
                 for chapter in manga.chapters:
                     manga.get(chapter)
+            elif args.checknew:
+                numnew = manga.numNewChapters()
+                if (numnew == 0):
+                    print "No new chapters available"
+                elif (numnew == 1):
+                    print "1 new chapter available"
+                else:
+                    print str(numnew) + " new chapters available"
             elif (args.chapter or args.begin):
                 downloadChapters(manga, args.chapter, args.begin, args.end)
 
