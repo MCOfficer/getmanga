@@ -1,6 +1,7 @@
 *.pyc
 *.cbz
 *.tmp
+config
 build
 *.egg-info
 dist
