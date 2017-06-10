@@ -203,7 +203,7 @@ def downloadChapters(manga, arg_chapter, arg_begin, arg_end):
                     start = index
                 if arg_end and int(float(chapter.number)) == int(float(arg_end)):
                     stop = index + 1
-            if (stop != None) and ( (arg_end == None) or (stop != None)):
+            if (start != None) and ((stop != None) or (arg_end == None)):
                 for chapter in manga.chapters[start:stop]:
                     manga.get(chapter)
             else:
