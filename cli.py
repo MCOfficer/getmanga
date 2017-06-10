@@ -36,8 +36,10 @@ def cmdparse():
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-a', '--all', action='store_true', help="download all chapters available")
-    group.add_argument('--checknew', action='store_true', help="check how many new chapters are available")
     group.add_argument('-c', '--chapter', type=str, help="chapter(s) number to download")
+    group.add_argument('-n', '--new', type=str, help="download new chapters")
+    group.add_argument('-l', '--latest', type=str, help="download latest chapter")
+    group.add_argument('--checknew', action='store_true', help="check how many new chapters are available")
 
     parser.add_argument('-d', '--dir', type=str, default='.', help='download directory')
     parser.add_argument('-v', '--version', action='version',
@@ -148,7 +150,15 @@ def main():
             if args.all:
                 for chapter in manga.chapters:
                     manga.get(chapter)
-            elif args.checknew:
+            elif (args.chapter or args.begin):
+                downloadChapters(manga, args.chapter, args.begin, args.end)
+            elif args.latest:
+                # last chapter
+                manga.get(manga.latest)
+            elif args.new:
+                # last chapter
+                manga.getNewChapters()
+            else:
                 numnew = manga.numNewChapters()
                 if (numnew == 0):
                     print "No new chapters available"
@@ -156,12 +166,6 @@ def main():
                     print "1 new chapter available"
                 else:
                     print str(numnew) + " new chapters available"
-            elif (args.chapter or args.begin):
-                downloadChapters(manga, args.chapter, args.begin, args.end)
-
-            else:
-                # last chapter
-                manga.get(manga.latest)
 
     except MangaException as msg:
         sys.exit(msg)
