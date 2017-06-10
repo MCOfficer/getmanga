@@ -82,14 +82,30 @@ def configparse(filepath):
     parser = configparser.SafeConfigParser()
     parser.read(filepath)
     config = []
-    for title in parser.sections():
-        try:
-            config.append((parser.get(title, 'site'), title,
-                           parser.get(title, 'dir'),
-                           parser.get(title, 'chapters')))
-        except Exception as msg:
-            raise MangaException('Config Error: %s' % msg)
-    return config
+    base_dir = None
+
+    if parser.has_section('GetManga'):
+        if parser.has_option('GetManga', 'base_dir'):
+            base_dir = parser.get('GetManga', 'base_dir')
+            if base_dir[-1] != "/":
+                base_dir = base_dir + "/"
+    overall_config = {"base_dir":base_dir}
+    for section in parser.sections():
+        if section != "GetManga":
+            # skip the overall config
+            title = section
+            try:
+                this_dir = None
+                if parser.has_option(title, 'dir'):
+                    this_dir = parser.get(title, 'dir')
+                if (base_dir == None) and (this_dir == None):
+                    sys.exit("Error: must define either dir or base_dir in config file.")
+                config.append((parser.get(title, 'site'), title,
+                               this_dir,
+                               parser.get(title, 'chapters')))
+            except Exception as msg:
+                raise MangaException('Config Error: %s' % msg)
+    return (overall_config, config)
 
 
 def main():
@@ -98,10 +114,19 @@ def main():
     try:
 
         if args.file:
-            config = configparse(args.file)
-            for (site, title, path, arg_chapter) in config:
+            (overall_config, config) = configparse(args.file)
+            base_dir = overall_config["base_dir"]
+            if (base_dir != None):
+                if base_dir[-1] != "/":
+                    base_dir = base_dir + "/"
+            for (site, title, this_dir, arg_chapter) in config:
                 manga = GetManga(site, title)
-                manga.path = path
+                if (this_dir == None):
+                    if (base_dir == None):
+                        sys.exit("Error: must define either dir or base_dir in config file.")
+                    else:
+                        this_dir = base_dir + manga.manga.title
+                manga.path = this_dir
                 if arg_chapter.strip().lower() == 'all':
                     for chapter in manga.chapters:
                         manga.get(chapter)
