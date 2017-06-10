@@ -50,6 +50,7 @@ def cmdparse():
     args = parser.parse_args()
     args.begin = None
     args.end = None
+    args.volumes = None
 
     if (not args.file) and (not args.title):
         sys.exit("{0}: error: must specify either config file or manga title".format(parser.prog))
@@ -59,14 +60,19 @@ def cmdparse():
             parser.print_usage()
             sys.exit("{0}: error: config file does not exit".format(parser.prog))
     if args.chapter:
-        (args.begin, args.end, args.chapter, chapter_valid) = parseargchapter(args.chapter)
+        (args.begin, args.end, args.chapter, chapter_valid, args.volumes) = parse_arg_chapter(args.chapter)
         if (not chapter_valid):
             parser.print_usage()
             sys.exit("{0}: error: invalid chapter interval, the end "
                      "should be bigger than start".format(parser.prog))
     return args
 
-def parseargchapter(arg_chapter):
+def parse_arg_chapter(arg_chapter):
+    arg_volumes = None
+    if ('v' in arg_chapter.lower()):
+        arg_volumes = arg_chapter.split(' ')
+        return (None, None, None, True, arg_volumes)
+
     arg_begin = None
     arg_end = None
     chapter = arg_chapter.split('-')
@@ -78,7 +84,7 @@ def parseargchapter(arg_chapter):
         valid = False
     else:
         valid = True
-    return (arg_begin, arg_end, arg_chapter, valid)
+    return (arg_begin, arg_end, arg_chapter, valid, None)
 
 def configparse(filepath):
     """Returns parsed config from an ini file"""
@@ -144,9 +150,12 @@ def main():
                 elif arg_chapter.strip().lower() == 'new':
                     manga.getNewChapters()
                 else:
-                    (arg_begin, arg_end, arg_chapter, chapter_valid) = parseargchapter(arg_chapter)
+                    (arg_begin, arg_end, arg_chapter, chapter_valid, arg_volumes) = parse_arg_chapter(arg_chapter)
                     if (chapter_valid):
-                        downloadChapters(manga, arg_chapter, arg_begin, arg_end)
+                        if (arg_volumes != None):
+                            downloadVolumes(manga, arg_volumes)
+                        else:
+                            downloadChapters(manga, arg_chapter, arg_begin, arg_end)
                     else:
                         print "Error on " + title + ": invalid chapter interval."
         else:
@@ -157,6 +166,8 @@ def main():
             if args.all:
                 for chapter in manga.chapters:
                     manga.get(chapter)
+            elif args.volumes:
+                downloadVolumes(manga, args.volumes)
             elif (args.chapter or args.begin):
                 downloadChapters(manga, args.chapter, args.begin, args.end)
             elif args.latest:
@@ -176,6 +187,16 @@ def main():
                 else:
                     print str(numnew) + " new chapters available"
 
+    except MangaException as msg:
+        sys.exit(msg)
+
+def downloadVolumes(manga, arg_volumes):
+    try:
+        for chapter in manga.chapters:
+            volume = chapter.volume
+            if volume != None:
+                if volume in arg_volumes:
+                    manga.get(chapter)
     except MangaException as msg:
         sys.exit(msg)
 
