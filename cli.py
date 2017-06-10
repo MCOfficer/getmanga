@@ -26,13 +26,18 @@ version = 0 #pkg_resources.require("GetManga")[0].version
 def cmdparse():
     """Returns parsed arguments from command line"""
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f', '--file', type=str, help="%(prog)s config file")
-    parser.add_argument('title', type=str, help="manga title to download")
+
+    group1 = parser.add_mutually_exclusive_group()
+    group1.add_argument('-f', '--file', type=str, help="%(prog)s config file")
+    group1.add_argument('-t', '--title', type=str, help="manga title to download")
+
     parser.add_argument('-s', '--site', choices=SITES.keys(), default='mangahere',
                         help="manga site to download from")
+
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-a', '--all', action='store_true', help="download all chapters available")
     group.add_argument('-c', '--chapter', type=str, help="chapter(s) number to download")
+
     parser.add_argument('-d', '--dir', type=str, default='.', help='download directory')
     parser.add_argument('-v', '--version', action='version',
                         version='{0} {1}'.format(parser.prog, version),
@@ -42,22 +47,34 @@ def cmdparse():
     args.begin = None
     args.end = None
 
+    if (not args.file) and (not args.title):
+        sys.exit("{0}: error: must specify either config file or manga title".format(parser.prog))
+
     if args.file:
         if not os.path.isfile(args.file):
             parser.print_usage()
             sys.exit("{0}: error: config file does not exit".format(parser.prog))
     if args.chapter:
-        chapter = args.chapter.split('-')
-        if len(chapter) == 2:
-            args.chapter = None
-            args.begin = chapter[0]
-            args.end = chapter[1] if chapter[1] else None
-        if args.begin and args.end and (int(args.begin) > int(args.end)):
+        (args.begin, args.end, args.chapter, chapter_valid) = parseargchapter(args.chapter)
+        if (not chapter_valid):
             parser.print_usage()
             sys.exit("{0}: error: invalid chapter interval, the end "
                      "should be bigger than start".format(parser.prog))
     return args
 
+def parseargchapter(arg_chapter):
+    arg_begin = None
+    arg_end = None
+    chapter = arg_chapter.split('-')
+    if len(chapter) == 2:
+        arg_chapter = None
+        arg_begin = chapter[0]
+        arg_end = chapter[1] if chapter[1] else None
+    if arg_begin and arg_end and (int(arg_begin) > int(arg_end)):
+        valid = False
+    else:
+        valid = True
+    return (arg_begin, arg_end, arg_chapter, valid)
 
 def configparse(filepath):
     """Returns parsed config from an ini file"""
