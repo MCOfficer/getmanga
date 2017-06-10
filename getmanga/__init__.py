@@ -22,7 +22,7 @@ import requests
 from lxml import html
 
 
-Chapter = namedtuple('Chapter', 'number name uri')
+Chapter = namedtuple('Chapter', 'number name uri volume')
 Page = namedtuple('Page', 'name uri')
 
 
@@ -203,9 +203,10 @@ class MangaSite(object):
         for _chapter in _chapters:
             number = self._get_chapter_number(_chapter)
             location = _chapter.get('href')
-            name = self._get_chapter_name(str(number), location)
+            volume = self._get_chapter_volume(location)
+            name = self._get_chapter_name(str(number), volume, location)
             uri = self._get_chapter_uri(location)
-            chapters.append(Chapter(number, name, uri))
+            chapters.append(Chapter(number, name, uri, volume))
 
         if not chapters:
             raise MangaException("There is no chapter available.")
@@ -263,7 +264,18 @@ class MangaSite(object):
         # used by: animea, mangafox, mangahere, mangareader, mangatown
         return chapter.text.strip().split(' ')[-1]
 
-    def _get_chapter_name(self, number, location):
+    def _get_chapter_volume(self, location):
+        """Returns chapter's volume number from a chapter's URL"""
+        # the most common one is getting a section like /v[0-9.]+/c[0-9]*
+        # used by: mangafox, mangahere, mangatown, mangastream
+        volume = None
+        vrex = re.compile("/(v[0-9.]+)/c[0-9]")
+        vsearch = vrex.search(location)
+        if vsearch:
+            volume = vsearch.group(1)
+        return volume
+
+    def _get_chapter_name(self, number, volume, location):
         """Returns the appropriate name for the chapter for achive name"""
         # deal with decimals. we want 6 -> 006 and 2.3 -> 002.3
         try:
@@ -276,7 +288,11 @@ class MangaSite(object):
                 numstr = str(int(float(number))).zfill(3) + decstr
         except ValueError:
             numstr = number.zfill(3)
-        return "{0}_c{1}".format(self.title, numstr)
+        if (volume == None):
+            return "{0}_c{1}".format(self.title, numstr)
+        else:
+            # include volume if available
+            return "{0}_{1}_c{2}".format(self.title, volume, numstr)
 
     def _get_chapter_uri(self, location):
         """Returns absolute url of chapter's page from location"""
