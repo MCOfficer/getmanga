@@ -84,7 +84,11 @@ def main():
             for (site, title, path, new) in config:
                 manga = GetManga(site, title)
                 manga.path = path
-                manga.get(manga.latest)
+                if new:
+                    manga.get(manga.latest)
+                else:
+                    for chapter in manga.chapters:
+                        manga.get(chapter)
 
         if args.all:
             for chapter in manga.chapters:
