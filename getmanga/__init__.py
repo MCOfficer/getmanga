@@ -152,7 +152,12 @@ class GetManga(object):
                 image_ext = uri[:query].split('.')[-1]
             else:
                 image_ext = uri.split('.')[-1]
-            name = page.name + os.path.extsep + image_ext
+
+            # reformat all numbers, e.g. 1->001, 10-> 010 so that they'll be sorted properly
+            numrex = re.compile("([0-9]+)")
+            new_page_name = re.sub(numrex, lambda x: x.group(1).zfill(3), page.name)
+
+            name = new_page_name + os.path.extsep + image_ext
             image = self.manga.download(uri)
         except MangaException as msg:
             queue.put((None, msg))
