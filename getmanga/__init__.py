@@ -116,6 +116,13 @@ class GetManga(object):
         pages = self.manga.get_pages(chapter.uri)
         progress(0, len(pages))
 
+        ## debug
+        #print()
+        ##print(chapter.uri)
+        #print(pages[0])
+        #print()
+        #raise MangaException("Debug bail")
+
         threads = []
         semaphore = Semaphore(self.concurrency)
         queue = Queue()
@@ -192,7 +199,7 @@ class MangaSite(object):
     def title_uri(self):
         """Returns the index page's url of manga title"""
         # this is the most common url for manga title
-        # used by: mangafox, mangastream, mangahere, mangatown
+        # used by: mangafox, mangastream, mangahere, mangatown, mangalion
         return "{0}/manga/{1}/".format(self.site_uri, self.title)
 
     @property
@@ -225,9 +232,12 @@ class MangaSite(object):
         pages = []
         for _page in _pages:
             name = self._get_page_name(_page.text)
+            #print("Name: ",name)
             if not name:
                 continue
             uri = self._get_page_uri(chapter_uri, name)
+            #print("URI: ",uri)
+            #print()
             pages.append(Page(name, uri))
         return pages
 
@@ -266,7 +276,7 @@ class MangaSite(object):
     def _get_chapter_number(chapter):
         """Returns chapter's number from a chapter's HtmlElement"""
         # the most common one is getting the last word from a href section.
-        # used by: animea, mangafox, mangahere, mangareader, mangatown
+        # used by: animea, mangafox, mangahere, mangareader, mangatown, mangalion
         return chapter.text.strip().split(' ')[-1]
 
     def _get_chapter_volume(self, location):
@@ -363,6 +373,34 @@ class MangaFox(MangaSite):
         """Returns manga image page url"""
         # chapter's page already has the first page's name in it.
         return re.sub(r'[0-9]+.html$', "{0}.html".format(page_name), chapter_uri)
+
+class MangaLion(MangaSite):
+    """class for mangalion site"""
+    # their slogan should be: "we are not the best, but we are the first"
+    site_uri = "http://www.mangalion.com"
+
+    _chapters_css = "ul.basic-list li a.ch-name"
+    _pages_css = "div.chapter-title #page_select option"
+    _image_css = "div.chapter-container a img"
+
+    @property
+    def title(self):
+        """Returns the right manga title from user input"""
+        return re.sub(r'[^a-z0-9]+', '-', self.input_title)
+
+    @staticmethod
+    def _get_page_name(page_text):
+        """Returns page name from text available or None if it's not a valid page"""
+        return re.sub("\s*","",page_text)
+
+    @staticmethod
+    def _get_page_uri(chapter_uri, page_name):
+        """Returns manga image page url"""
+        # chapter's page already has the first page's name in it.
+        if (page_name == "1"):
+            return chapter_uri
+        else:
+            return chapter_uri + "/" + "{0}".format(page_name)
 
 
 class MangaStream(MangaSite):
@@ -470,6 +508,7 @@ class MangaReader(MangaSite):
 
 SITES = dict(animea=MangaAnimea,
              mangafox=MangaFox,
+             mangalion=MangaLion,
              mangahere=MangaHere,
              mangareader=MangaReader,
              mangastream=MangaStream,
