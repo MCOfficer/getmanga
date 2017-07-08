@@ -183,6 +183,9 @@ class MangaSite(object):
     _pages_css = None
     _image_css = None
 
+
+    _headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'} 
+
     def __init__(self, title):
         # all sites only use lowercase title on their urls.
         self.input_title = title.strip().lower()
@@ -205,7 +208,7 @@ class MangaSite(object):
     @property
     def chapters(self):
         """Returns available chapters"""
-        content = self.session.get(self.title_uri).text
+        content = self.session.get(self.title_uri, headers=self._headers).text
         doc = html.fromstring(content)
         _chapters = doc.cssselect(self._chapters_css)
         if self.descending_list:
@@ -226,7 +229,7 @@ class MangaSite(object):
 
     def get_pages(self, chapter_uri):
         """Returns a list of available pages of a chapter"""
-        content = self.session.get(chapter_uri).text
+        content = self.session.get(chapter_uri, headers=self._headers).text
         doc = html.fromstring(content)
         _pages = doc.cssselect(self._pages_css)
         pages = []
@@ -243,7 +246,7 @@ class MangaSite(object):
 
     def get_image_uri(self, page_uri):
         """Returns uri of image from a chapter page"""
-        content = self.session.get(page_uri).text
+        content = self.session.get(page_uri, headers=self._headers).text
         doc = html.fromstring(content)
         image_uri = doc.cssselect(self._image_css)[0].get('src')
         # use http for mangastream's relative url
@@ -256,7 +259,7 @@ class MangaSite(object):
         retry = 0
         while retry < 5:
             try:
-                resp = self.session.get(image_uri)
+                resp = self.session.get(image_uri, headers=self._headers)
                 if str(resp.status_code).startswith('4'):
                     retry = 5
                 elif str(resp.status_code).startswith('5'):
@@ -415,7 +418,7 @@ class MangaStream(MangaSite):
 
     def get_pages(self, chapter_uri):
         """Returns a list of available pages of a chapter"""
-        content = self.session.get(chapter_uri).text
+        content = self.session.get(chapter_uri, headers=self._headers).text
         doc = html.fromstring(content)
         _pages = doc.cssselect(self._pages_css)
         for _page in _pages:
@@ -487,7 +490,7 @@ class MangaReader(MangaSite):
         # some title's page is in the root, others hidden in a random numeric subdirectory,
         # so we need to search the manga list to get the correct url.
         try:
-            content = self.session.get("{0}/alphabetical".format(self.site_uri)).text
+            content = self.session.get("{0}/alphabetical".format(self.site_uri), headers=self._headers).text
             page = re.findall(r'[0-9]+/' + self.title + '.html', content)[0]
             uri = "{0}/{1}".format(self.site_uri, page)
         except IndexError:
