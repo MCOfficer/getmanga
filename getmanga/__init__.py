@@ -413,7 +413,43 @@ class MangaLion(MangaSite):
         else:
             return chapter_uri + "/" + "{0}".format(page_name)
 
+class RawMangaUpdate(MangaSite):
+    """class for rawmangaupdate site"""
+    # site for raw manga
+    site_uri = "http://rawmangaupdate.com"
+
+    _chapters_css = "ul.chapters h5 a"
+    #_pages_css = "ul.dropdown-menu li a span" # what comes up when you allow javascript
+    _pages_css = "div[class|=page-nav] select[id|=page-list] option"
+    _image_css = "div[id|=ppp] img"
+
+    @property
+    def title(self):
+        """Returns the right manga title from user input"""
+        self.input_title = self.input_title.lower()
+        return re.sub(r'[^a-zA-Z0-9]+', '-', self.input_title)
+
+    @staticmethod
+    def _get_chapter_number(chapter):
+        """Returns chapter's number from a chapter's HtmlElement"""
+
+        # idea: match the last number in the string
+        last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
+        last_num_search = last_num_regex.search(chapter.text.strip())
+        if (last_num_search):
+            return last_num_search.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def _get_page_uri(chapter_uri, page_name):
+        """Returns manga image page url"""
+        # chapter's page already has the first page's name in it.
+        return chapter_uri + "/" + "{0}".format(page_name)
+
 class SenManga(MangaSite):
+    # working until the image scraping bit...
+
     """class for senmanga site"""
     # site for raw manga
     site_uri = "http://raw.senmanga.com"
@@ -582,6 +618,7 @@ SITES = dict(animea=MangaAnimea,
              mangafox=MangaFox,
              mangalion=MangaLion,
              #senmanga=SenManga,
+             rawmangaupdate=RawMangaUpdate,
              mangahere=MangaHere,
              mangareader=MangaReader,
              mangastream=MangaStream,
