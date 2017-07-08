@@ -159,6 +159,10 @@ class GetManga(object):
             else:
                 image_ext = uri.split('.')[-1]
 
+            # if the image extension is weird, just assume it should be jpg
+            if image_ext.lower() not in ['png','jpeg','jpg','tif','tiff','pdf','gif','webp','bmp']:
+                image_ext = 'jpg'
+
             # reformat all numbers, e.g. 1->001, 10-> 010 so that they'll be sorted properly
             numrex = re.compile("([0-9]+)")
             new_page_name = re.sub(numrex, lambda x: x.group(1).zfill(3), page.name)
@@ -252,6 +256,7 @@ class MangaSite(object):
         content = self.session.get(page_uri, headers=self._headers).text
         doc = html.fromstring(content)
         image_uri = doc.cssselect(self._image_css)[0].get('src')
+        image_uri = image_uri.strip()
         # use http for mangastream's relative url
         if image_uri.startswith('//'):
             return "http:{0}".format(image_uri)
