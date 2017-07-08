@@ -168,7 +168,7 @@ class GetManga(object):
             new_page_name = re.sub(numrex, lambda x: x.group(1).zfill(3), page.name)
 
             name = new_page_name + os.path.extsep + image_ext
-            image = self.manga.download(uri)
+            image = self.manga.download(uri, page.uri)
         except MangaException as msg:
             queue.put((None, msg))
         else:
@@ -260,19 +260,28 @@ class MangaSite(object):
         # use http for mangastream's relative url
         if image_uri.startswith('//'):
             return "http:{0}".format(image_uri)
+        elif image_uri.startswith('/'): # fix other relative paths
+            return "{0}{1}".format(self.site_uri, image_uri)
         return image_uri
 
-    def download(self, image_uri):
+    def download(self, image_uri, page_uri):
+        # update the session to list the current page as the referrer
+        self.session.headers.update(self._headers)
+        self.session.headers.update({'referer': page_uri})
+        #print image_uri
+        #print self.session.headers
+        #raise MangaException("Debug exit")
+
         content = None
         retry = 0
         while retry < 5:
             try:
-                resp = self.session.get(image_uri, headers=self._headers)
+                resp = self.session.get(image_uri)
                 if str(resp.status_code).startswith('4'):
                     retry = 5
                 elif str(resp.status_code).startswith('5'):
                     retry += 1
-                elif len(resp.content) != int(resp.headers['content-length']):
+                elif ('content-length' in resp.headers) and (len(resp.content) != int(resp.headers['content-length'])):
                     retry += 1
                 else:
                     retry = 5
