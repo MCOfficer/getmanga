@@ -25,7 +25,6 @@ from lxml import html
 Chapter = namedtuple('Chapter', 'number name uri volume')
 Page = namedtuple('Page', 'name uri')
 
-
 class MangaException(Exception):
     """Exception class for manga"""
     pass
@@ -187,8 +186,7 @@ class MangaSite(object):
     _headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'} 
 
     def __init__(self, title):
-        # all sites only use lowercase title on their urls.
-        self.input_title = title.strip().lower()
+        self.input_title = title.strip()
         self.session = requests.Session()
 
     @property
@@ -196,6 +194,9 @@ class MangaSite(object):
         """Returns the right manga title from user input"""
         # combination of alphanumeric and underscore only is the most used format.
         # used by: mangafox, mangastream, mangahere, mangatown
+
+        # all sites EXCEPT senmanga only use lowercase title on their urls.
+        self.input_title = self.input_title.lower()
         return re.sub(r'[^a-z0-9]+', '_', re.sub(r'^[^a-z0-9]+|[^a-z0-9]+$', '', self.input_title))
 
     @property
@@ -221,7 +222,9 @@ class MangaSite(object):
             volume = self._get_chapter_volume(location)
             name = self._get_chapter_name(str(number), volume, location)
             uri = self._get_chapter_uri(location)
-            chapters.append(Chapter(number, name, uri, volume))
+
+            if (number != None):
+                chapters.append(Chapter(number, name, uri, volume))
 
         if not chapters:
             raise MangaException("There is no chapter available.")
@@ -379,7 +382,6 @@ class MangaFox(MangaSite):
 
 class MangaLion(MangaSite):
     """class for mangalion site"""
-    # their slogan should be: "we are not the best, but we are the first"
     site_uri = "http://www.mangalion.com"
 
     _chapters_css = "ul.basic-list li a.ch-name"
@@ -389,6 +391,7 @@ class MangaLion(MangaSite):
     @property
     def title(self):
         """Returns the right manga title from user input"""
+        self.input_title = self.input_title.lower()
         return re.sub(r'[^a-z0-9]+', '-', self.input_title)
 
     @staticmethod
@@ -405,6 +408,65 @@ class MangaLion(MangaSite):
         else:
             return chapter_uri + "/" + "{0}".format(page_name)
 
+class SenManga(MangaSite):
+    """class for senmanga site"""
+    # site for raw manga
+    site_uri = "http://raw.senmanga.com"
+
+    _chapters_css = "div #post tr td a"
+    _pages_css = "div select[name|=page] option"
+    _image_css = "img.picture"
+
+    @property
+    def title_uri(self):
+        """Returns the index page's url of manga title"""
+        return "{0}/{1}/".format(self.site_uri, self.title)
+
+    @property
+    def title(self):
+        """Returns the right manga title from user input"""
+        # IMPORTANT: SenManga requires correct capitalization
+        return re.sub(r'[^a-zA-Z0-9]+', '-', self.input_title)
+
+    # override _get_chapter_uri
+    def _get_chapter_uri(self, location):
+        """Returns absolute url of chapter's page from location"""
+        # some sites already use absolute url on their chapter list, some have relative urls.
+        this_location = None
+        if location.startswith('http://'):
+            this_location = location
+        else:
+            this_location = "{0}{1}".format(self.site_uri, location)
+        
+        # use the version of the url without page number 1 appended
+        if this_location[-2:] == '/1':
+            this_location = this_location[:-2]
+
+        return this_location
+
+
+    @staticmethod
+    def _get_chapter_number(chapter):
+        """Returns chapter's number from a chapter's HtmlElement"""
+
+        # idea: match the last number in the string
+        last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
+        last_num_search = last_num_regex.search(chapter.text.strip())
+        if (last_num_search):
+            return last_num_search.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def _get_page_name(page_text):
+        """Returns page name from text available or None if it's not a valid page"""
+        return re.sub("\s*#\s*","",page_text)
+
+    @staticmethod
+    def _get_page_uri(chapter_uri, page_name):
+        """Returns manga image page url"""
+        # chapter's page already has the first page's name in it.
+        return chapter_uri + "/" + "{0}".format(page_name)
 
 class MangaStream(MangaSite):
     """class for mangastream site"""
@@ -457,6 +519,7 @@ class MangaAnimea(MangaSite):
     @property
     def title(self):
         """Returns the right manga title from user input"""
+        self.input_title = self.input_title.lower()
         return re.sub(r'[^a-z0-9]+', '-', self.input_title)
 
     @property
@@ -482,6 +545,7 @@ class MangaReader(MangaSite):
     @property
     def title(self):
         """Returns the right manga title from user input"""
+        self.input_title = self.input_title.lower()
         return re.sub(r'[^\-a-z0-9]', '', re.sub(r'[ _]', '-', self.input_title))
 
     @property
@@ -512,6 +576,7 @@ class MangaReader(MangaSite):
 SITES = dict(animea=MangaAnimea,
              mangafox=MangaFox,
              mangalion=MangaLion,
+             #senmanga=SenManga,
              mangahere=MangaHere,
              mangareader=MangaReader,
              mangastream=MangaStream,
