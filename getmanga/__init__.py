@@ -465,7 +465,7 @@ class SenManga(MangaSite):
 
     _chapters_css = "div #post tr td a"
     _pages_css = "div select[name|=page] option"
-    _image_css = "img.picture"
+    _image_css = "img[id|=picture]"
 
     @property
     def title_uri(self):
@@ -499,13 +499,18 @@ class SenManga(MangaSite):
     def _get_chapter_number(chapter):
         """Returns chapter's number from a chapter's HtmlElement"""
 
-        # idea: match the last number in the string
-        last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
-        last_num_search = last_num_regex.search(chapter.text.strip())
-        if (last_num_search):
-            return last_num_search.group(1)
-        else:
-            return None
+        href_regex = re.compile('a href="[^"]*/([0-9]+)/1?"')
+        href_search = href_regex.search(html.tostring(chapter))
+        if (href_search):
+                return href_search.group(1)
+        else: 
+            # if that fails, match the last number in the string 
+            last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
+            last_num_search = last_num_regex.search(chapter.text.strip())
+            if (last_num_search):
+                return last_num_search.group(1)
+            else:
+                return None
 
     @staticmethod
     def _get_page_name(page_text):
@@ -626,7 +631,7 @@ class MangaReader(MangaSite):
 SITES = dict(animea=MangaAnimea,
              mangafox=MangaFox,
              mangalion=MangaLion,
-             #senmanga=SenManga,
+             senmanga=SenManga,
              rawmangaupdate=RawMangaUpdate,
              mangahere=MangaHere,
              mangareader=MangaReader,
