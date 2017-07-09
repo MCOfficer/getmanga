@@ -478,7 +478,7 @@ class SenManga(MangaSite):
     def title(self):
         """Returns the right manga title from user input"""
         # IMPORTANT: SenManga requires correct capitalization
-        return re.sub(r'[^a-zA-Z0-9]+', '-', self.input_title)
+        return re.sub(r'[^_a-zA-Z0-9]+', '-', self.input_title)
 
     # override _get_chapter_uri
     def _get_chapter_uri(self, location):
