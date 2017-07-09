@@ -323,11 +323,13 @@ class MangaSite(object):
                 numstr = str(int(float(number))).zfill(3) + decstr
         except ValueError:
             numstr = number.zfill(3)
+
+        clean_title = self.title.lower().replace("-","_")
         if (volume == None):
-            return "{0}_c{1}".format(self.title, numstr)
+            return "{0}_c{1}".format(clean_title, numstr)
         else:
             # include volume if available
-            return "{0}_{1}_c{2}".format(self.title, volume, numstr)
+            return "{0}_{1}_c{2}".format(clean_title, volume, numstr)
 
     def _get_chapter_uri(self, location):
         """Returns absolute url of chapter's page from location"""

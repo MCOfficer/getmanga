@@ -140,7 +140,8 @@ def main():
                     if (base_dir == None):
                         sys.exit("Error: must define either dir or base_dir in config file.")
                     else:
-                        this_dir = base_dir + manga.manga.title
+                        clean_title = manga.manga.title.lower().replace("-","_")
+                        this_dir = base_dir + clean_title
                 manga.path = this_dir
                 if arg_chapter.strip().lower() == 'all':
                     for chapter in manga.chapters:
