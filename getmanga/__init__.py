@@ -113,6 +113,7 @@ class GetManga(object):
         sys.stdout.write("downloading {0} {1} to {2}\n".format(self.title, chapter.number,cbz_name))
 
         pages = self.manga.get_pages(chapter.uri)
+        #pages = [pages[0]]# debug
         progress(0, len(pages))
 
         ## debug
@@ -179,7 +180,7 @@ class GetManga(object):
 
 class MangaSite(object):
     site_uri = None
-    # all but mangareader uses descending chapter list
+    # all but mangareader and cartoonmad use descending chapter list
     descending_list = True
 
     _chapters_css = None
@@ -245,7 +246,7 @@ class MangaSite(object):
             #print("Name: ",name)
             if not name:
                 continue
-            uri = self._get_page_uri(chapter_uri, name)
+            uri = self._get_page_uri(chapter_uri, name, _page)
             #print("URI: ",uri)
             #print()
             pages.append(Page(name, uri))
@@ -348,7 +349,7 @@ class MangaSite(object):
         return page_text
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name):
+    def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         # every sites use different format for their urls, this is a sample.
         # used by: mangahere, mangatown
@@ -391,7 +392,7 @@ class MangaFox(MangaSite):
         return page_text
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name):
+    def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         # chapter's page already has the first page's name in it.
         return re.sub(r'[0-9]+.html$', "{0}.html".format(page_name), chapter_uri)
@@ -416,13 +417,65 @@ class MangaLion(MangaSite):
         return re.sub("\s*","",page_text)
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name):
+    def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         # chapter's page already has the first page's name in it.
         if (page_name == "1"):
             return chapter_uri
         else:
             return chapter_uri + "/" + "{0}".format(page_name)
+
+# NOTE: must enter title as, e.g. "grand blue:3899", where last numbers will be used for the uri
+class CartoonMad(MangaSite):
+    """class for cartoonmad site"""
+    site_uri = "http://www.cartoonmad.com"
+    descending_list = False
+
+    _chapters_css = "fieldset[id|=info] td a"
+    _pages_css = "tr td center li select option[value]"
+    _image_css = "td[align|=center] table td[align|=center] a img[oncontextmenu]"
+
+    @property
+    def title_uri(self):
+        """Returns the index page's url of manga title"""
+        title_id = self.input_title.split(":")[-1].strip()
+        return "{0}/comic/{1}.html".format(self.site_uri, title_id)
+
+    @property
+    def title(self):
+        """Returns the right manga title from user input"""
+        self.input_title = self.input_title.lower()
+        lhs_title = (":".join(self.input_title.split(":")[0:-1])).strip()
+        return re.sub(r'[^a-z0-9]+', '_', lhs_title)
+
+    @staticmethod
+    def _get_chapter_number(chapter):
+        """Returns chapter's number from a chapter's HtmlElement"""
+        # idea: match the last number in the string
+        last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
+        last_num_search = last_num_regex.search(chapter.text.strip())
+        if (last_num_search):
+            return last_num_search.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def _get_page_name(page_text):
+        """Returns page name from text available or None if it's not a valid page"""
+        last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
+        last_num_search = last_num_regex.search(page_text.strip())
+        if (last_num_search):
+            return last_num_search.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def _get_page_uri(chapter_uri, page_name, page):
+        """Returns manga image page url"""
+        # chapter's page already has the first page's name in it.
+        relative_page_uri = page.get('value')
+        return "http://www.cartoonmad.com/comic/{0}".format(relative_page_uri)
+
 
 class RawMangaUpdate(MangaSite):
     """class for rawmangaupdate site"""
@@ -453,7 +506,7 @@ class RawMangaUpdate(MangaSite):
             return None
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name):
+    def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         # chapter's page already has the first page's name in it.
         return chapter_uri + "/" + "{0}".format(page_name)
@@ -520,7 +573,7 @@ class SenManga(MangaSite):
         return re.sub("\s*#\s*","",page_text)
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name):
+    def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         # chapter's page already has the first page's name in it.
         return chapter_uri + "/" + "{0}".format(page_name)
@@ -550,7 +603,7 @@ class MangaStream(MangaSite):
         pages = []
         for num in range(1, int(last_page) + 1):
             name = str(num)
-            uri = self._get_page_uri(chapter_uri, name)
+            uri = self._get_page_uri(chapter_uri, name, None)
             pages.append(Page(name, uri))
         return pages
 
@@ -560,7 +613,7 @@ class MangaStream(MangaSite):
         return chapter.text.split(' - ')[0]
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name):
+    def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         return re.sub('[0-9]+$', page_name, chapter_uri)
 
@@ -585,7 +638,7 @@ class MangaAnimea(MangaSite):
         return "{0}/{1}.html".format(self.site_uri, self.title)
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name):
+    def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         return re.sub(r'.html$', '-page-{0}.html'.format(page_name), chapter_uri)
 
@@ -619,7 +672,7 @@ class MangaReader(MangaSite):
         return uri
 
     @staticmethod
-    def _get_page_uri(chapter_uri, page_name='1'):
+    def _get_page_uri(chapter_uri, page_name='1', page_input=None):
         """Returns manga image page url"""
         # older stuff, the one in numeric subdirectory, typically named "chapter-X.html",
         # while the new stuff only use number.
@@ -634,6 +687,7 @@ SITES = dict(animea=MangaAnimea,
              mangafox=MangaFox,
              mangalion=MangaLion,
              senmanga=SenManga,
+             cartoonmad=CartoonMad,
              rawmangaupdate=RawMangaUpdate,
              mangahere=MangaHere,
              mangareader=MangaReader,

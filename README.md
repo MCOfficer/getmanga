@@ -13,8 +13,9 @@ Currently supported sites:
 * mangastream.com
 * mangatown.com
 * mangalion.com
-* raw.senmanga.com
-* rawmangaupdate.com
+* raw.senmanga.com (日本語)
+* rawmangaupdate.com (日本語)
+* cartoonmad.com (繁體中文)
 
 ## Usage:
 * The simplest way:
