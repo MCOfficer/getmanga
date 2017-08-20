@@ -241,8 +241,10 @@ class MangaSite(object):
         doc = html.fromstring(content)
         _pages = doc.cssselect(self._pages_css)
         pages = []
+        page_j = 0
         for _page in _pages:
-            name = self._get_page_name(_page.text)
+            page_j += 1
+            name = self._get_page_name(_page.text, page_j)
             #print("Name: ",name)
             if not name:
                 continue
@@ -341,7 +343,7 @@ class MangaSite(object):
             return "{0}{1}".format(self.site_uri, location)
 
     @staticmethod
-    def _get_page_name(page_text):
+    def _get_page_name(page_text, page_j):
         """Returns page name from text available or None if it's not a valid page"""
         # typical name: page's number, double page (eg. 10-11), or credits
         # normally page listing from each chapter only has it's name in it, but..
@@ -384,7 +386,7 @@ class MangaFox(MangaSite):
     _image_css = "img#image"
 
     @staticmethod
-    def _get_page_name(page_text):
+    def _get_page_name(page_text, page_j):
         """Returns page name from text available"""
         # mangafox has comments section in it's page listing
         if page_text == 'Comments':
@@ -412,7 +414,7 @@ class MangaLion(MangaSite):
         return re.sub(r'[^a-z0-9]+', '-', self.input_title)
 
     @staticmethod
-    def _get_page_name(page_text):
+    def _get_page_name(page_text, page_j):
         """Returns page name from text available or None if it's not a valid page"""
         return re.sub("\s*","",page_text)
 
@@ -460,7 +462,7 @@ class CartoonMad(MangaSite):
             return None
 
     @staticmethod
-    def _get_page_name(page_text):
+    def _get_page_name(page_text, page_j):
         """Returns page name from text available or None if it's not a valid page"""
         last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
         last_num_search = last_num_regex.search(page_text.strip())
@@ -510,6 +512,94 @@ class RawMangaUpdate(MangaSite):
         """Returns manga image page url"""
         # chapter's page already has the first page's name in it.
         return chapter_uri + "/" + "{0}".format(page_name)
+
+# NOTE: must enter title as, e.g. "yushentongxing:zh-hant:734", where the middle item is the language
+class Webtoons(MangaSite):
+    # In progress...
+
+    """class for webtoons site"""
+    # naver webtoons
+    site_uri = "http://www.webtoons.com"
+
+    _chapters_css = "div[class|=detail_lst] ul li a"
+    _pages_css = "div[class|=viewer_lst] img[class|=_images]"
+    _image_css = "img[id|=picture]"
+
+    @property
+    def title_uri(self):
+        """Returns the index page's url of manga title"""
+        title_id = self.input_title.split(":")[-1].strip()
+        title_lang = self.input_title.split(":")[-2].strip()
+        lhs_title = (":".join(self.input_title.split(":")[0:-2])).strip()
+        return "{0}/{1}/drama/{2}/list?title_no={3}".format(self.site_uri, lhs_title, title_lang, title_id)
+
+    @property
+    def title(self):
+        """Returns the right manga title from user input"""
+        self.input_title = self.input_title.lower()
+        lhs_title = (":".join(self.input_title.split(":")[0:-2])).strip()
+        return re.sub(r'[^a-z0-9]+', '-', lhs_title)
+
+    @property
+    def chapters(self):
+        """Returns available chapters"""
+        content = self.session.get(self.title_uri, headers=self._headers).text
+        doc = html.fromstring(content)
+        _lastchapter = doc.cssselect(self._chapters_css)
+        _lastchapter = _lastchapter[0]
+
+        _lastnumber = int(self._get_chapter_number(_lastchapter))
+        _lastlocation = _lastchapter.get('href')
+
+        epno_regex = re.compile('episode_no=([0-9]+)')
+
+        chapters = []
+        for number in range(1,_lastnumber+1):
+            location = re.sub(epno_regex, "episode_no=" + str(number), _lastlocation)
+            volume = None
+            name = self._get_chapter_name(str(number), volume, location)
+            uri = self._get_chapter_uri(location)
+
+            if (number != None):
+                chapters.append(Chapter(number, name, uri, volume))
+
+        if not chapters:
+            raise MangaException("There is no chapter available.")
+        return chapters
+
+    @staticmethod
+    def _get_chapter_number(chapter):
+        """Returns chapter's number from a chapter's HtmlElement"""
+
+        href_regex = re.compile('episode_no=([0-9]+)')
+        href_search = href_regex.search(html.tostring(chapter))
+        if (href_search):
+                return href_search.group(1)
+        else: 
+            # if that fails, match the last number in the string 
+            last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
+            last_num_search = last_num_regex.search(chapter.text.strip())
+            if (last_num_search):
+                return last_num_search.group(1)
+            else:
+                return None
+
+    @staticmethod
+    def _get_page_name(page_text, page_j):
+        """Returns page name from text available or None if it's not a valid page"""
+        return str(page_j)
+
+    @staticmethod
+    def _get_page_uri(chapter_uri, page_name, page):
+        """Returns manga image page url"""
+        # chapter's page already has the first page's name in it.
+        return page.get("data-url")
+
+    @staticmethod
+    def get_image_uri(page_uri):
+        """Returns uri of image from a chapter page"""
+        image_uri = page_uri
+        return image_uri
 
 class SenManga(MangaSite):
     # working until the image scraping bit...
@@ -568,7 +658,7 @@ class SenManga(MangaSite):
                 return None
 
     @staticmethod
-    def _get_page_name(page_text):
+    def _get_page_name(page_text, page_j):
         """Returns page name from text available or None if it's not a valid page"""
         return re.sub("\s*#\s*","",page_text)
 
@@ -692,7 +782,8 @@ SITES = dict(animea=MangaAnimea,
              mangahere=MangaHere,
              mangareader=MangaReader,
              mangastream=MangaStream,
-             mangatown=MangaTown)
+             mangatown=MangaTown,
+             webtoons=Webtoons)
 
 
 def progress(page, total):

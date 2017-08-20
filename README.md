@@ -16,6 +16,7 @@ Currently supported sites:
 * raw.senmanga.com (日本語)
 * rawmangaupdate.com (日本語)
 * cartoonmad.com (繁體中文)
+* webtoons.com (English, 繁體中文, 简体中文, ภาษาไทย, bahasa Indonesia)
 
 ## Usage:
 * The simplest way:
