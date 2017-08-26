@@ -52,13 +52,18 @@ def cmdparse():
     args.end = None
     args.volumes = None
 
+    if len(sys.argv) <= 1:
+        parser.print_help()
+        sys.exit()
+
     if (not args.file) and (not args.title):
+        parser.print_usage()
         sys.exit("{0}: error: must specify either config file or manga title".format(parser.prog))
 
     if args.file:
         if not os.path.isfile(args.file):
             parser.print_usage()
-            sys.exit("{0}: error: config file does not exit".format(parser.prog))
+            sys.exit("{0}: error: config file does not exist".format(parser.prog))
     if args.chapter:
         (args.begin, args.end, args.chapter, chapter_valid, args.volumes) = parse_arg_chapter(args.chapter)
         if (not chapter_valid):
