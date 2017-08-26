@@ -1,0 +1,31 @@
+__getmanga()
+{
+    local cur prev opts fileopts diropts siteopts available_sites
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="--help --version --file --title --site --chapter --new --all --latest --dir --list"
+    available_sites="mangahere senmanga cartoonmad webtoons rawmangaupdate animea mangafox mangalion mangareader mangastream mangatown"
+    fileopts="-f|--file"
+    siteopts="-s|--site"
+    diropts="-d|--dir"
+    nocompleteopts="-t|--title|-c|--chapter"
+
+    if [[ ${prev} =~ ${fileopts} ]]; then
+        COMPREPLY=( $(compgen -f -- ${cur}) )
+        return 0
+    elif [[ ${prev} =~ ${diropts} ]]; then
+        COMPREPLY=( $(compgen -d -- ${cur}) )
+        return 0
+    elif [[ ${prev} =~ ${siteopts} ]]; then
+        COMPREPLY=( $(compgen -W "${available_sites}" -- ${cur}) )
+        return 0
+    elif [[ ${prev} =~ ${nocompleteopts} ]]; then
+        return 0
+    elif [[ ${cur} == * ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+}
+
+complete -F __getmanga getmanga

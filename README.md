@@ -72,6 +72,12 @@ Currently supported sites:
 * -f/--file: load config file instead of using command arguments.
   (example file included)
 
+**Bash completion:**
+To install bash completion, copy getmanga.completion to the relevant directory for your distribution. Most likely this means either
+  `cp getmanga.completion /etc/bash-completion.d/`
+  or
+  `cp getmanga.completion /usr/share/bash-completion/completions/getmanga`
+
 ## Credits:
 * yudha-gunslinger for [progressbar](http://gunslingerc0de.wordpress.com/2010/08/13/python-command-line-progress-bar/)
 
