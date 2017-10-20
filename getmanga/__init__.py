@@ -337,8 +337,13 @@ class MangaSite(object):
     def _get_chapter_uri(self, location):
         """Returns absolute url of chapter's page from location"""
         # some sites already use absolute url on their chapter list, some have relative urls.
-        if location.startswith('http://'):
+        if location.startswith('http://') or location.startswith('https://'):
             return location
+        elif location.startswith('//'):
+            prefix = "http"
+            if "https" in self.site_uri:
+                prefix = "https"
+            return "{0}:{1}".format(prefix, location)
         else:
             return "{0}{1}".format(self.site_uri, location)
 
