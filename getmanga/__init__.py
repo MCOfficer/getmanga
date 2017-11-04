@@ -171,6 +171,7 @@ class GetManga(object):
             numrex = re.compile("([0-9]+)")
             new_page_name = re.sub(numrex, lambda x: x.group(1).zfill(3), page.name)
 
+            #print("Image URI: " + uri)
             name = new_page_name + os.path.extsep + image_ext
             image = self.manga.download(uri, page.uri)
         except MangaException as msg:
@@ -382,6 +383,12 @@ class MangaSite(object):
         # used by: mangahere, mangatown
         return "{0}{1}.html".format(chapter_uri, page_name)
 
+    @staticmethod
+    def _filter_ad_pages(chapter_uri, page_uri):
+        """Return False if a page is an advertisement"""
+        # This depends on the site
+        return True
+
 
 class MangaHere(MangaSite):
     """class for mangahere site"""
@@ -391,6 +398,13 @@ class MangaHere(MangaSite):
     _pages_css = "section.readpage_top div.go_page select option"
     _image_css = "img#image"
 
+    @staticmethod
+    def _filter_ad_pages(chapter_uri, page_uri):
+        """Return False if a page is an advertisement"""
+        if "featured.htm" in page_uri.lower():
+            return False
+        return True
+
 
 class MangaTown(MangaSite):
     """class for mangatown site"""
@@ -399,6 +413,13 @@ class MangaTown(MangaSite):
     _chapters_css = "div.chapter_content ul.chapter_list li a"
     _pages_css = "div.manga_read_footer div.page_select select option"
     _image_css = "img#image"
+
+    @staticmethod
+    def _filter_ad_pages(chapter_uri, page_uri):
+        """Return False if a page is an advertisement"""
+        if "featured.htm" in page_uri.lower():
+            return False
+        return True
 
 
 class MangaFox(MangaSite):
