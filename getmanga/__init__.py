@@ -8,6 +8,7 @@ from __future__ import division
 import os
 import re
 import sys
+from time import sleep
 
 if sys.version_info >= (3, 0, 0):
     from queue import Queue
@@ -153,6 +154,8 @@ class GetManga(object):
         try:
             semaphore.acquire()
             uri = self.manga.get_image_uri(page.uri)
+            if not uri:
+                raise MangaException("Failed to download image")
             # mangahere & mangatown have token as trailing query on it's image url
             query = uri.find('?')
             if query != -1:
@@ -249,17 +252,34 @@ class MangaSite(object):
             if not name:
                 continue
             uri = self._get_page_uri(chapter_uri, name, _page)
+
+            # Remove advertisement pages
+            if (not self._filter_ad_pages(chapter_uri, uri)):
+                continue
+
             #print("URI: ",uri)
             #print()
+
             pages.append(Page(name, uri))
+        #raise MangaException("Debug bail")
         return pages
 
     def get_image_uri(self, page_uri):
         """Returns uri of image from a chapter page"""
-        content = self.session.get(page_uri, headers=self._headers).text
-        doc = html.fromstring(content)
-        image_uri = doc.cssselect(self._image_css)[0].get('src')
-        image_uri = image_uri.strip()
+        image_uri_csssel = []
+
+        max_attempts = 3
+        attempt = 0
+        while((len(image_uri_csssel) == 0) and (attempt < max_attempts)):
+            content = self.session.get(page_uri, headers=self._headers).text
+            doc = html.fromstring(content)
+            image_uri_csssel = doc.cssselect(self._image_css)
+            attempt += 1
+        if (len(image_uri_csssel) == 0):
+            return None
+        else:
+            image_uri = image_uri_csssel[0].get('src')
+            image_uri = image_uri.strip()
         # use http for mangastream's relative url
         if image_uri.startswith('//'):
             return "http:{0}".format(image_uri)
@@ -279,7 +299,7 @@ class MangaSite(object):
         retry = 0
         while retry < 5:
             try:
-                resp = self.session.get(image_uri)
+                resp = self.session.get(image_uri, timeout=9.05)
                 if str(resp.status_code).startswith('4'):
                     retry = 5
                 elif str(resp.status_code).startswith('5'):
