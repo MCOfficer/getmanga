@@ -652,9 +652,9 @@ class SenManga(MangaSite):
 
     """class for senmanga site"""
     # site for raw manga
-    site_uri = "http://raw.senmanga.com"
+    site_uri = "https://raw.senmanga.com"
 
-    _chapters_css = "div #post tr td a"
+    _chapters_css = "div #content div[class|=element] a"
     _pages_css = "div select[name|=page] option"
     _image_css = "img[id|=picture]"
 
@@ -675,6 +675,8 @@ class SenManga(MangaSite):
         # some sites already use absolute url on their chapter list, some have relative urls.
         this_location = None
         if location.startswith('http://'):
+            this_location = location
+        elif location.startswith('https://'):
             this_location = location
         else:
             this_location = "{0}{1}".format(self.site_uri, location)
