@@ -8,11 +8,10 @@ Currently supported sites:
 
 * manga.animea.net
 * mangafox.me
-* mangahere.co
+* mangahere.cc
 * mangareader.net
 * mangastream.com
-* mangatown.com
-* mangalion.com
+* mangadex.org (partially implemented)
 * raw.senmanga.com (日本語)
 * rawmangaupdate.com (日本語)
 * cartoonmad.com (繁體中文)
@@ -21,26 +20,26 @@ Currently supported sites:
 ## Usage:
 * The simplest way:
 
-  `getmanga {title} --latest`
+  `getmanga -t {title} --latest`
 
   will download the latest chapter of that title from the default site
   (mangahere.co)
 
 * Or if you want to get from specific site:
 
-  `getmanga {title} -s {site}  --latest`
+  `getmanga -t {title} -s {site}  --latest`
 
   example: `getmanga 'fairy tail' -s animea --latest`
 
 * Download all chapters of a title:
 
-  `getmanga {title} -s {site} --all`
+  `getmanga -t {title} -s {site} --all`
 
   example: `getmanga one_piece -s mangastream --all`
 
 * Download specific chapter(s) of a title:
 
-  `getmanga {title} -s {site} -c {chapter}`
+  `getmanga -t {title} -s {site} -c {chapter}`
 
    example:
 
@@ -54,17 +53,27 @@ Currently supported sites:
 
 * See what chapters are available without downloading them:
 
-  `getmanga {title} -s {site} --list`
+  `getmanga -t {title} -s {site} --list`
 
 * Check to see how many new chapters are available (newer than the newest chapter in the download directory) without downloading them:
 
-  `getmanga {title} -s {site} --checknew`
+  `getmanga -t {title} -s {site} --checknew`
 
 * Download new chapters of a title (everything newer than the newest chapter in the download directory):
 
-  `getmanga {title} -s {site} --new`
+  `getmanga -t {title} -s {site} --new`
 
   example: `getmanga Kingdom -s senmanga --new`
+
+**Special usage for specific sites**
+* senmanga requires correct capitalization in manga title
+
+* mangadex and cartoonmad urls have an id number instead of the manga title. So, first find the manga you want to download on mangadex or cartoonmad and then enter the title here as "title:id". This will be parsed so that the manga is named correctly. You can set title to any string you like.
+    example: `getmanga -t tsukikage-baby:12772 -s mangadex --latest`
+    example: `getmanga -t bleach:1300 -s cartoonmad --latest`
+
+* webtoons.com requires a both a language tag and a page id.  So, first find the manga you want to download on webtoons.com and then enter the title here as "title:lang:id". This will be parsed so that the manga is named correctly.  Language tags: en, zh-hans, zh-hant, th, id
+    example: `getmanga -t "ghost teller:th:944" -s webtoons --latest`
 
 **Optional arguments:**
 
