@@ -37,8 +37,8 @@ def cmdparse():
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-a', '--all', action='store_true', help="download all chapters available")
     group.add_argument('-c', '--chapter', type=str, help="chapter(s) number to download")
-    group.add_argument('-n', '--new', type=str, help="download new chapters")
-    group.add_argument('-l', '--latest', type=str, help="download latest chapter")
+    group.add_argument('-n', '--new', action='store_true', help="download new chapters")
+    group.add_argument('-l', '--latest', action='store_true', help="download latest chapter")
     group.add_argument('--checknew', action='store_true', help="check how many new chapters are available")
     group.add_argument('--list', action='store_true', help="list all available chapters")
 
