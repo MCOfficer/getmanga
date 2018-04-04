@@ -69,10 +69,13 @@ Currently supported sites:
 * senmanga requires correct capitalization in manga title
 
 * mangadex and cartoonmad urls have an id number instead of the manga title. So, first find the manga you want to download on mangadex or cartoonmad and then enter the title here as "title:id". This will be parsed so that the manga is named correctly. You can set title to any string you like.
+
     example: `getmanga -t tsukikage-baby:12772 -s mangadex --latest`
+
     example: `getmanga -t bleach:1300 -s cartoonmad --latest`
 
 * webtoons.com requires a both a language tag and a page id.  So, first find the manga you want to download on webtoons.com and then enter the title here as "title:lang:id". This will be parsed so that the manga is named correctly.  Language tags: en, zh-hans, zh-hant, th, id
+
     example: `getmanga -t "ghost teller:th:944" -s webtoons --latest`
 
 **Optional arguments:**
