@@ -389,6 +389,57 @@ class MangaSite(object):
         # This depends on the site
         return True
 
+class MangaDex(MangaSite):
+    """class for mangadex site"""
+    site_uri = "https://mangadex.org"
+    descending_list = True
+
+    _chapters_css = "div[id|=chapters] td a[data-chapter-num]"
+    _pages_css = "select[id|=jump_page] option[value]"
+    _image_css = "div[id|=content] img[id|=current_page]"
+
+    @property
+    def title_uri(self):
+        """Returns the index page's url of manga title"""
+        title_id = self.input_title.split(":")[-1].strip()
+        return "{0}/manga/{1}".format(self.site_uri, title_id)
+
+    @property
+    def title(self):
+        """Returns the right manga title from user input"""
+        self.input_title = self.input_title.lower()
+        lhs_title = (":".join(self.input_title.split(":")[0:-1])).strip()
+        return re.sub(r'[^a-z0-9]+', '_', lhs_title)
+
+    @staticmethod
+    def _get_chapter_number(chapter):
+        """Returns chapter's number from a chapter's HtmlElement"""
+        # idea: match the last number in the string
+        last_num_regex = re.compile('\\b([0-9][0-9.]*)\\b[^0-9]*$')
+        last_num_search = last_num_regex.search(chapter.text.strip())
+        if (last_num_search):
+            return last_num_search.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def _get_page_name(page_text, page_j):
+        """Returns page name from text available or None if it's not a valid page"""
+        last_num_regex = re.compile('\\b([0-9]+)\\b[^0-9]*$')
+        last_num_search = last_num_regex.search(page_text.strip())
+        if (last_num_search):
+            return last_num_search.group(1)
+        else:
+            return None
+
+    @staticmethod
+    def _get_page_uri(chapter_uri, page_name, page):
+        """Returns manga image page url"""
+        relative_page_uri = page.get('value')
+        if chapter_uri[-1] != "/":
+            chapter_uri += "/"
+        return "{0}{1}".format(chapter_uri, relative_page_uri)
+
 
 class MangaHere(MangaSite):
     """class for mangahere site"""
@@ -784,6 +835,7 @@ SITES = dict(animea=MangaAnimea,
              cartoonmad=CartoonMad,
              rawmangaupdate=RawMangaUpdate,
              mangahere=MangaHere,
+             mangadex=MangaDex,
              mangareader=MangaReader,
              mangastream=MangaStream,
              webtoons=Webtoons)
