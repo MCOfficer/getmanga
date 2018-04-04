@@ -392,7 +392,7 @@ class MangaSite(object):
 
 class MangaHere(MangaSite):
     """class for mangahere site"""
-    site_uri = "http://www.mangahere.co"
+    site_uri = "http://www.mangahere.cc"
 
     _chapters_css = "div.detail_list ul li a"
     _pages_css = "section.readpage_top div.go_page select option"
