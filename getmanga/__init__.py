@@ -156,7 +156,7 @@ class GetManga(object):
             uri = self.manga.get_image_uri(page.uri)
             if not uri:
                 raise MangaException("Failed to download image")
-            # mangahere & mangatown have token as trailing query on it's image url
+            # mangahere has token as trailing query on it's image url
             query = uri.find('?')
             if query != -1:
                 image_ext = uri[:query].split('.')[-1]
@@ -202,7 +202,7 @@ class MangaSite(object):
     def title(self):
         """Returns the right manga title from user input"""
         # combination of alphanumeric and underscore only is the most used format.
-        # used by: mangafox, mangastream, mangahere, mangatown
+        # used by: mangafox, mangastream, mangahere
 
         # all sites EXCEPT senmanga only use lowercase title on their urls.
         self.input_title = self.input_title.lower()
@@ -212,7 +212,7 @@ class MangaSite(object):
     def title_uri(self):
         """Returns the index page's url of manga title"""
         # this is the most common url for manga title
-        # used by: mangafox, mangastream, mangahere, mangatown
+        # used by: mangafox, mangastream, mangahere
         return "{0}/manga/{1}/".format(self.site_uri, self.title)
 
     @property
@@ -320,13 +320,13 @@ class MangaSite(object):
     def _get_chapter_number(chapter):
         """Returns chapter's number from a chapter's HtmlElement"""
         # the most common one is getting the last word from a href section.
-        # used by: animea, mangafox, mangahere, mangareader, mangatown
+        # used by: animea, mangafox, mangahere, mangareader
         return chapter.text.strip().split(' ')[-1]
 
     def _get_chapter_volume(self, location):
         """Returns chapter's volume number from a chapter's URL"""
         # the most common one is getting a section like /v[0-9.]+/c[0-9]*
-        # used by: mangafox, mangahere, mangatown, mangastream
+        # used by: mangafox, mangahere, mangastream
         volume = None
         vrex = re.compile("/(v[0-9.]+)/c[0-9]")
         vsearch = vrex.search(location)
@@ -380,7 +380,7 @@ class MangaSite(object):
     def _get_page_uri(chapter_uri, page_name, page):
         """Returns manga image page url"""
         # every sites use different format for their urls, this is a sample.
-        # used by: mangahere, mangatown
+        # used by: mangahere
         return "{0}{1}.html".format(chapter_uri, page_name)
 
     @staticmethod
@@ -396,22 +396,6 @@ class MangaHere(MangaSite):
 
     _chapters_css = "div.detail_list ul li a"
     _pages_css = "section.readpage_top div.go_page select option"
-    _image_css = "img#image"
-
-    @staticmethod
-    def _filter_ad_pages(chapter_uri, page_uri):
-        """Return False if a page is an advertisement"""
-        if "featured.htm" in page_uri.lower():
-            return False
-        return True
-
-
-class MangaTown(MangaSite):
-    """class for mangatown site"""
-    site_uri = "http://www.mangatown.com"
-
-    _chapters_css = "div.chapter_content ul.chapter_list li a"
-    _pages_css = "div.manga_read_footer div.page_select select option"
     _image_css = "img#image"
 
     @staticmethod
@@ -802,7 +786,6 @@ SITES = dict(animea=MangaAnimea,
              mangahere=MangaHere,
              mangareader=MangaReader,
              mangastream=MangaStream,
-             mangatown=MangaTown,
              webtoons=Webtoons)
 
 
