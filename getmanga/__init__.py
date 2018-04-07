@@ -394,7 +394,7 @@ class MangaDex(MangaSite):
     site_uri = "https://mangadex.org"
     descending_list = True
 
-    _chapters_css = "div[id|=chapters] td a[data-chapter-num]"
+    _chapters_css = "div[id|=content] td a[data-chapter-num]"
     _pages_css = "select[id|=jump_page] option[value]"
     _image_css = "div[id|=content] img[id|=current_page]"
 
