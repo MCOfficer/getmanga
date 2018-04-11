@@ -5,7 +5,7 @@ __getmanga()
     cur="${COMP_WORDS[COMP_CWORD]}"
     prev="${COMP_WORDS[COMP_CWORD-1]}"
     opts="--help --version --file --title --site --chapter --new --all --latest --dir --list"
-    available_sites="mangahere senmanga cartoonmad webtoons rawmangaupdate animea mangafox mangalion mangareader mangastream mangatown"
+    available_sites="mangahere senmanga cartoonmad webtoons rawmangaupdate mangafox mangareader mangastream mangadex"
     fileopts="-f|--file"
     siteopts="-s|--site"
     diropts="-d|--dir"

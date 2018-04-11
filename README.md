@@ -6,7 +6,6 @@ and save it to a .cbz format.
 
 Currently supported sites:
 
-* manga.animea.net
 * mangafox.me
 * mangahere.cc
 * mangareader.net
@@ -23,13 +22,13 @@ Currently supported sites:
   `getmanga -t {title} --latest`
 
   will download the latest chapter of that title from the default site
-  (mangahere.co)
+  (mangahere.cc)
 
 * Or if you want to get from specific site:
 
   `getmanga -t {title} -s {site}  --latest`
 
-  example: `getmanga 'fairy tail' -s animea --latest`
+  example: `getmanga 'fairy tail' -s mangahere --latest`
 
 * Download all chapters of a title:
 

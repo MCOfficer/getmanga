@@ -327,7 +327,7 @@ class MangaSite(object):
     def _get_chapter_number(chapter):
         """Returns chapter's number from a chapter's HtmlElement"""
         # the most common one is getting the last word from a href section.
-        # used by: animea, mangafox, mangahere, mangareader
+        # used by: mangafox, mangahere, mangareader
         return chapter.text.strip().split(' ')[-1]
 
     def _get_chapter_volume(self, location):
@@ -775,31 +775,6 @@ class MangaStream(MangaSite):
         return re.sub('[0-9]+$', page_name, chapter_uri)
 
 
-class MangaAnimea(MangaSite):
-    """class for manga animea site"""
-    site_uri = "http://manga.animea.net"
-
-    _chapters_css = "ul.chapterlistfull li a"
-    _pages_css = "div.float-left select.pageselect option"
-    _image_css = "img#scanmr"
-
-    @property
-    def title(self):
-        """Returns the right manga title from user input"""
-        self.input_title = self.input_title.lower()
-        return re.sub(r'[^a-z0-9]+', '-', self.input_title)
-
-    @property
-    def title_uri(self):
-        """Returns the index page's url of manga title"""
-        return "{0}/{1}.html".format(self.site_uri, self.title)
-
-    @staticmethod
-    def _get_page_uri(chapter_uri, page_name, page):
-        """Returns manga image page url"""
-        return re.sub(r'.html$', '-page-{0}.html'.format(page_name), chapter_uri)
-
-
 class MangaReader(MangaSite):
     """class for mangareader site"""
     site_uri = "http://www.mangareader.net"
@@ -840,8 +815,7 @@ class MangaReader(MangaSite):
             return "{0}/{1}".format(chapter_uri, page_name)
 
 
-SITES = dict(animea=MangaAnimea,
-             mangafox=MangaFox,
+SITES = dict(mangafox=MangaFox,
              senmanga=SenManga,
              cartoonmad=CartoonMad,
              rawmangaupdate=RawMangaUpdate,
