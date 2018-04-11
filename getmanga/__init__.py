@@ -130,11 +130,14 @@ class GetManga(object):
         for page in pages:
             thread = Thread(target=self._get_image, args=(semaphore, queue, page))
             thread.daemon = True
-            thread.start()
+            if not (self.manga.threadless):
+                thread.start()
             threads.append(thread)
 
         try:
             for thread in threads:
+                if (self.manga.threadless):
+                    thread.start()
                 thread.join()
                 name, image = queue.get()
                 if not name:
@@ -190,6 +193,10 @@ class MangaSite(object):
     _chapters_css = None
     _pages_css = None
     _image_css = None
+
+    # Certain sites will block connections that come too frequently; in such
+    # cases we set threadless to True and download sequentially.
+    threadless = False
 
 
     _headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'} 
@@ -448,6 +455,10 @@ class MangaHere(MangaSite):
     _chapters_css = "div.detail_list ul li a"
     _pages_css = "section.readpage_top div.go_page select option"
     _image_css = "img#image"
+
+    # MangaHere will block connections that come too fast. Downloading
+    # sequentially seems to work.
+    threadless = True
 
     @staticmethod
     def _filter_ad_pages(chapter_uri, page_uri):
